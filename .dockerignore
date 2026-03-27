@@ -1,0 +1,8 @@
+.env
+__pycache__
+*.pyc
+.git
+.gitignore
+~$*
+NCR_Bilaspur_Night_Working.xlsx
+test_mh_breakdown.xlsx
