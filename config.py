@@ -14,6 +14,12 @@ if DEPLOY_MODE == "cloud":
     DAILY_LOADS_DIR = CLOUD_DATA
     TEMPLATE_FILE = CLOUD_DATA / "Layout_Productivity_Clean.xlsx"
     ACTUAL_PRODUCTIVITY_FILE = CLOUD_DATA / "Actual Productivity.xlsx"
+elif (BASE_DIR / "data_bundle").exists():
+    # Streamlit Cloud: data in data_bundle/ within repo
+    CLOUD_DATA = BASE_DIR / "data_bundle"
+    DAILY_LOADS_DIR = CLOUD_DATA
+    TEMPLATE_FILE = CLOUD_DATA / "Layout_Productivity_Clean.xlsx"
+    ACTUAL_PRODUCTIVITY_FILE = CLOUD_DATA / "Actual Productivity.xlsx"
 else:
     # Local: read from parent folder so user can update in place
     DAILY_LOADS_DIR = BASE_DIR.parent
