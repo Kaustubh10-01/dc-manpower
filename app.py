@@ -54,9 +54,9 @@ st.set_page_config(
 # ── Password Protection ──
 import os
 try:
-    _app_password = st.secrets.get("APP_PASSWORD", os.environ.get("APP_PASSWORD", "ShadowfaxFTW"))
+    _app_password = st.secrets.get("APP_PASSWORD", os.environ.get("APP_PASSWORD", ""))
 except Exception:
-    _app_password = os.environ.get("APP_PASSWORD", "ShadowfaxFTW")
+    _app_password = os.environ.get("APP_PASSWORD", "")
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
