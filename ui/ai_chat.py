@@ -16,6 +16,16 @@ if not os.getenv("ANTHROPIC_API_KEY") and _env_path.exists():
         if line.startswith("ANTHROPIC_API_KEY="):
             os.environ["ANTHROPIC_API_KEY"] = line.split("=", 1)[1].strip()
 
+# Streamlit Cloud: read from st.secrets
+if not os.getenv("ANTHROPIC_API_KEY"):
+    try:
+        import streamlit as _st
+        _key = _st.secrets.get("ANTHROPIC_API_KEY", "")
+        if _key:
+            os.environ["ANTHROPIC_API_KEY"] = _key
+    except Exception:
+        pass
+
 
 def _build_context(proc_staffing, proc_dc_summary, dock_staffing, dock_dc_summary,
                    proc_load, dock_hourly, proc_peak_days, dock_peak_days,
