@@ -54,9 +54,9 @@ st.set_page_config(
 # ── Password Protection ──
 import os
 try:
-    _app_password = st.secrets.get("APP_PASSWORD", os.environ.get("APP_PASSWORD", "ShadowfaxFTW"))
+    _app_password = st.secrets.get("APP_PASSWORD", os.environ.get("APP_PASSWORD", ""))
 except Exception:
-    _app_password = os.environ.get("APP_PASSWORD", "ShadowfaxFTW")
+    _app_password = os.environ.get("APP_PASSWORD", "")
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
@@ -217,8 +217,8 @@ proc_staffing = compute_shift_headcount(
 )
 
 # Productivity for processing
-_proc_peak_flat = set(d for dates in proc_peak_days.values() for d in dates)
-_pvol_base = load_df_preship[load_df_preship["Date of created"].isin(_proc_peak_flat)].copy()
+# Use ALL days in filtered range (not just peak days) for realistic avg daily vol
+_pvol_base = load_df_preship.copy()
 _pvol_base["hour"] = _pvol_base["hour"].astype(int)
 _svr = []
 for sn, sd in SHIFTS.items():
