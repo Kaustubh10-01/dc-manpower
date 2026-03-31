@@ -217,24 +217,24 @@ proc_staffing = compute_shift_headcount(
 )
 
 # Productivity for processing
-# Use ALL days in filtered range (not just peak days) for realistic avg daily vol
+# Use ALL days — total daily vol per layout (not per shift, to avoid overlap double-count)
 _pvol_base = load_df_preship.copy()
-_pvol_base["hour"] = _pvol_base["hour"].astype(int)
-_svr = []
-for sn, sd in SHIFTS.items():
-    sv = _pvol_base[_pvol_base["hour"].isin(sd["hours"])]
-    dv = sv.groupby(["DC", "layout_name", "Date of created"])["Total awb_number"].sum().reset_index()
-    av = dv.groupby(["DC", "layout_name"])["Total awb_number"].mean().reset_index().rename(
-        columns={"Total awb_number": "avg_daily_vol"}
-    )
-    av["shift"] = sn
-    _svr.append(av)
-if _svr:
-    _sv = pd.concat(_svr, ignore_index=True)
-    proc_staffing = proc_staffing.merge(_sv, on=["DC", "layout_name", "shift"], how="left")
-    proc_staffing["avg_daily_vol"] = proc_staffing["avg_daily_vol"].fillna(0)
-else:
-    proc_staffing["avg_daily_vol"] = 0
+_daily_layout_vol = (
+    _pvol_base.groupby(["DC", "layout_name", "Date of created"])["Total awb_number"]
+    .sum().reset_index()
+)
+_avg_layout_vol = (
+    _daily_layout_vol.groupby(["DC", "layout_name"])["Total awb_number"]
+    .mean().reset_index()
+    .rename(columns={"Total awb_number": "avg_daily_vol"})
+)
+# Assign full daily vol to each layout (NOT split by shift — productivity is daily metric)
+proc_staffing = proc_staffing.merge(_avg_layout_vol, on=["DC", "layout_name"], how="left")
+proc_staffing["avg_daily_vol"] = proc_staffing["avg_daily_vol"].fillna(0)
+# Only count volume once per layout — assign to the shift with the most heads, zero others
+proc_staffing["_max_shift"] = proc_staffing.groupby(["DC", "layout_name"])["total_heads"].transform("max")
+proc_staffing.loc[proc_staffing["total_heads"] < proc_staffing["_max_shift"], "avg_daily_vol"] = 0
+proc_staffing.drop(columns=["_max_shift"], inplace=True)
 # Compute avg daily flex for realistic productivity
 from core.staffing_calculator import compute_daily_flex
 _proc_daily_flex = compute_daily_flex(proc_load, proc_staffing, top_n=top_n_hours, flex_efficiency=flex_efficiency)
