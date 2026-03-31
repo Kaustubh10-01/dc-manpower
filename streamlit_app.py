@@ -137,6 +137,7 @@ flex_pct = st.sidebar.slider("Flex %", min_value=0.0, max_value=0.30, value=DEFA
 flex_efficiency = st.sidebar.slider("Flex Efficiency", min_value=0.50, max_value=1.00, value=DEFAULT_FLEX_EFFICIENCY, step=0.05, format="%.0f%%")
 st.sidebar.caption(f"Peak method: avg of top-{top_n_hours} hours per shift per day, averaged across {peak_days_count} peak days")
 exclude_prime = st.sidebar.toggle("Exclude Prime Load", value=False, help="Filter out layouts with 'PRIME' in the name")
+exclude_crossdock = st.sidebar.toggle("Exclude Cross-Dock", value=True, help="Filter out cross-dock / XD site volumes")
 
 # Refresh
 if st.sidebar.button("🔄 Refresh Data"):
@@ -173,6 +174,8 @@ except Exception as e:
 
 try:
     dock_df = cached_load_dock(date_start, date_end)
+    if exclude_crossdock and xd_sites and not dock_df.empty:
+        dock_df = dock_df[~dock_df["DC"].isin(xd_sites)]
 except Exception as e:
     st.warning(f"No dock data loaded: {e}")
     dock_df = pd.DataFrame()
@@ -194,6 +197,14 @@ if exclude_prime:
     load_df = load_df[~prime_mask]
     if load_df.empty:
         st.warning("No non-prime data found.")
+        st.stop()
+
+# Filter cross-dock / XD sites
+xd_sites = template.get("xd_sites", set())
+if exclude_crossdock and xd_sites:
+    load_df = load_df[~load_df["location_name"].isin(xd_sites)]
+    if load_df.empty:
+        st.warning("No non-XD data found.")
         st.stop()
 
 # Volumetric split & layout type
